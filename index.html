@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>✨ TaskFlow Pro — Premium Task Manager</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <!-- Quill Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <!-- Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- Modular Styles bundled via Vite -->
+</head>
+<body>
+
+    <!-- ==================== LOADER ==================== -->
+    <div id="loader" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center animate__animated animate__fadeIn" style="z-index: 999999; background: rgba(5,5,15,.9); backdrop-filter: blur(10px);">
+        <div class="loader-spinner"></div>
+        <h6 class="mt-3 fw-bold" style="color: var(--accent-cyan);">Processing...</h6>
+        <p class="text-muted small mt-2">Loading your workspace...</p>
+    </div>
+
+    <!-- ==================== LOGIN VIEW ==================== -->
+    <div id="loginView" class="d-flex align-items-center justify-content-center vh-100">
+        <div class="card border-0 shadow-lg p-4 mx-3 glass-card animate__animated animate__fadeInUp" style="width: 100%; max-width: 440px;">
+            <div class="text-center mb-4">
+                <div class="icon-circle mx-auto mb-3" style="background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(79,195,247,0.2));">
+                    <i class="fa-solid fa-tasks fa-2x" style="color: var(--accent-cyan);"></i>
+                </div>
+                <h4 class="fw-bold text-white">TaskFlow Pro</h4>
+                <p class="text-muted small mb-0">Premium Task Management System ✨</p>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="form-label small text-muted">📧 Email / Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="loginUsername" class="form-control" placeholder="Enter your email" required autocomplete="username">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted">🔑 Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility()" tabindex="-1" title="Show/Hide">
+                            <i class="fa-solid fa-eye" id="togglePassIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="loginBtn" class="btn w-100 py-2 fw-bold mt-1 shadow-sm" style="background: linear-gradient(135deg, #00e5ff, #4fc3f7); border: none; color: #000;">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Login to Workspace
+                </button>
+            </form>
+            <div id="loginError" class="text-danger small text-center mt-3 d-none animate__animated animate__headShake"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="mainApp" class="d-none">
+
+        <!-- ===== NAVBAR ===== -->
+        <nav class="navbar shadow-sm sticky-top px-3 glass-navbar">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a class="navbar-brand d-flex align-items-center fw-bold" href="#" onclick="showDashboard()">
+                    <i class="fa-solid fa-bolt me-2" style="color: var(--accent-cyan);"></i> 
+                    <span style="background: linear-gradient(135deg, #00e5ff, #4fc3f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TaskFlow</span>
+                </a>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <div id="navUserInfo" class="d-none d-sm-flex align-items-center gap-2 small"></div>
+                    
+                    <!-- Theme Toggle -->
+                    <button class="btn btn-sm glass-btn" id="themeToggle" title="Toggle Theme">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+                    
+                    <button class="btn btn-sm btn-outline-danger" onclick="logoutUser()" title="Logout">
+                        <i class="fa-solid fa-power-off me-1"></i><span class="d-none d-sm-inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container py-4">
+
+            <!-- ========== DASHBOARD VIEW ========== -->
+            <div id="dashboardView">
+                <!-- Welcome Card -->
+                <div class="card border-0 mb-4 glass-card animate__animated animate__fadeInDown">
+                    <div class="card-body p-4 text-center">
+                        <h4 class="fw-bold mb-1" style="color: var(--accent-cyan);">Welcome to Your Workspace! 🚀</h4>
+                        <p class="text-muted mb-0">Manage tasks efficiently — Select an option below</p>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 text-center py-3 glass-card stat-card-hover">
+                            <div class="stat-icon mb-2"><i class="fa-solid fa-list-check fa-lg"></i></div>
+                            <h3 class="fw-bold mb-0" style="color: var(--accent-cyan);" id="statTotalTasks">-</h3>
+                            <small class="text-muted">Total Tasks</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 text-center py-3 glass-card stat-card-hover">
+                            <div class="stat-icon mb-2"><i class="fa-solid fa-clock fa-lg" style="color: #ffc107;"></i></div>
+                            <h3 class="fw-bold mb-0" style="color: #ffc107;" id="statTotalHours">-</h3>
+                            <small class="text-muted">Total Hours</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 text-center py-3 glass-card stat-card-hover">
+                            <div class="stat-icon mb-2"><i class="fa-solid fa-folder fa-lg" style="color: #4fc3f7;"></i></div>
+                            <h3 class="fw-bold mb-0" style="color: #4fc3f7;" id="statProjects">-</h3>
+                            <small class="text-muted">Projects</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card border-0 text-center py-3 glass-card stat-card-hover">
+                            <div class="stat-icon mb-2"><i class="fa-solid fa-circle-check fa-lg" style="color: #4caf50;"></i></div>
+                            <h3 class="fw-bold mb-0" style="color: #4caf50;" id="statCompleted">-</h3>
+                            <small class="text-muted">Completed %</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Cards (Add Task hidden for admin — see applyRoleBasedAccess) -->
+                <div class="row g-3 mb-4 animate__animated animate__fadeInUp dashboard-action-grid" id="dashboardActionRow" style="animation-delay: 0.2s;">
+                    <div class="col-12 col-md-4" id="dashboardAddTaskWrap">
+                        <div class="card h-100 btn-card glass-card dashboard-action-card" onclick="showForm()">
+                            <div class="card-body p-4 text-center">
+                                <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(79,195,247,0.2));">
+                                    <i class="fa-solid fa-plus fa-2x" style="color: var(--accent-cyan);"></i>
+                                </div>
+                                <h5 class="fw-bold text-white dashboard-action-title">New Task<br><small class="text-muted dashboard-action-sub">(Create New Entry)</small></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4" id="dashboardFilterToggleWrap">
+                        <div class="card h-100 btn-card glass-card dashboard-action-card" onclick="toggleDashboardFilters()">
+                            <div class="card-body p-4 text-center">
+                                <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,152,0,0.2));">
+                                    <i class="fa-solid fa-filter fa-2x" style="color: #ffc107;"></i>
+                                </div>
+                                <h5 class="fw-bold text-white dashboard-action-title">Filters<br><small class="text-muted dashboard-action-sub" id="dashboardFilterToggleLabel">(Show Dashboard Filters)</small></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4" id="dashboardHistoryWrap">
+                        <div class="card h-100 btn-card glass-card dashboard-action-card" onclick="showHistory()">
+                            <div class="card-body p-4 text-center">
+                                <div class="icon-circle mb-3 mx-auto" style="background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(129,199,132,0.2));">
+                                    <i class="fa-solid fa-clock-rotate-left fa-2x" style="color: #4caf50;"></i>
+                                </div>
+                                <h5 class="fw-bold text-white dashboard-action-title">History & Tasks<br><small class="text-muted dashboard-action-sub">(View All Records)</small></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Real-time Filters -->
+                <div id="dashboardFiltersPanelWrap" class="card border-0 mb-4 glass-card dashboard-filters-card d-none animate__animated animate__fadeInUp" style="animation-delay: 0.05s;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <h6 class="fw-bold mb-0 small" style="color: var(--accent-cyan);">
+                                <i class="fa-solid fa-sliders me-2"></i>Dashboard Filters
+                            </h6>
+                            <button class="btn btn-sm btn-outline-danger" onclick="clearDashboardFilters()">
+                                <i class="fa-solid fa-xmark me-1"></i>Clear
+                            </button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-3" id="dashboardFilterProjectWrap">
+                                <label class="form-label small text-muted mb-1" for="dashboardFilterProject">
+                                    <i class="fa-solid fa-folder me-1"></i>Project
+                                </label>
+                                <select id="dashboardFilterProject" class="form-select" onchange="applyDashboardRealtimeFilters()">
+                                    <option value="">All Projects</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-3" id="dashboardFilterMonthWrap">
+                                <label class="form-label small text-muted mb-1" for="dashboardFilterMonth">
+                                    <i class="fa-solid fa-calendar me-1"></i>Month
+                                </label>
+                                <select id="dashboardFilterMonth" class="form-select" onchange="applyDashboardRealtimeFilters()">
+                                    <option value="">All Months</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-3" id="dashboardFilterPersonWrap">
+                                <label class="form-label small text-muted mb-1" for="dashboardFilterPerson">
+                                    <i class="fa-solid fa-user-group me-1"></i>Name
+                                </label>
+                                <select id="dashboardFilterPerson" class="form-select" onchange="applyDashboardRealtimeFilters()">
+                                    <option value="">All People</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-3" id="dashboardFilterTaskWrap">
+                                <label class="form-label small text-muted mb-1" for="dashboardFilterTask">
+                                    <i class="fa-solid fa-list-check me-1"></i>Task
+                                </label>
+                                <select id="dashboardFilterTask" class="form-select" onchange="applyDashboardRealtimeFilters()">
+                                    <option value="">All Tasks</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="row g-3 mb-4 animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+                    <!-- Pie / Donut Charts (compact) -->
+                    <div class="col-12 col-lg-5">
+                        <div class="row g-3 h-100">
+                            <div class="col-6">
+                                <div class="card border-0 p-2 glass-card h-100">
+                                    <h6 class="fw-bold mb-2 small" style="color: var(--accent-cyan);"><i class="fa-solid fa-chart-pie me-1"></i>Projects</h6>
+                                    <div style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                        <canvas id="projectChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-0 p-2 glass-card h-100">
+                                    <h6 class="fw-bold mb-2 small" style="color: #ffc107;"><i class="fa-solid fa-chart-donut me-1"></i>Status</h6>
+                                    <div style="height: 180px; display: flex; align-items: center; justify-content: center;">
+                                        <canvas id="statusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Frequency Panel (User) -->
+                    <div class="col-12 col-lg-7">
+                        <div class="card border-0 p-3 glass-card h-100">
+                            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                <h6 class="fw-bold mb-0" style="color: var(--accent-cyan);">
+                                    <i class="fa-solid fa-chart-bar me-2"></i>Activity Frequency
+                                </h6>
+                                <div class="btn-group btn-group-sm freq-filter-pills" role="group" aria-label="Frequency filter">
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreqAll"    value="all"     autocomplete="off" checked onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreqAll">All</label>
+
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreqDay"    value="day"     autocomplete="off" onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreqDay">Today</label>
+
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreqWeek"   value="week"    autocomplete="off" onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreqWeek">Week</label>
+
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreq15"     value="15days"  autocomplete="off" onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreq15">15 Days</label>
+
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreqMonth"  value="month"   autocomplete="off" onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreqMonth">Month</label>
+
+                                    <input type="radio" class="btn-check" name="userFreqRadio" id="uFreq3M"     value="3months" autocomplete="off" onchange="applyFrequencyFilter('user')">
+                                    <label class="btn btn-outline-secondary" for="uFreq3M">3 Months</label>
+                                </div>
+                            </div>
+                            <!-- Mini bar chart for frequency -->
+                            <div style="height: 130px; position: relative;">
+                                <canvas id="userFrequencyChart"></canvas>
+                            </div>
+                            <!-- Quick stats row -->
+                            <div class="row g-2 mt-2" id="userFreqStatsRow">
+                                <div class="col-4 text-center">
+                                    <div class="small text-muted">Tasks</div>
+                                    <div class="fw-bold" style="color: var(--accent-cyan);" id="userFreqStatTasks">—</div>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="small text-muted">Hours</div>
+                                    <div class="fw-bold" style="color: #ffc107;" id="userFreqStatHours">—</div>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="small text-muted">Done %</div>
+                                    <div class="fw-bold" style="color: #4caf50;" id="userFreqStatDone">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Analytics: four distinct sections (pie → podium → leaderboard → scoreboard) -->
+                <div id="adminAnalyticsSection" class="d-none mb-4 admin-analytics-root">
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-1 flex-wrap gap-2">
+                        <h6 class="fw-bold mb-0 admin-analytics-page-title"><i class="fa-solid fa-crown me-2"></i>Admin Analytics</h6>
+                        <small class="admin-analytics-hint">Live updates on dashboard · uses filtered task set when on History</small>
+                    </div>
+
+                    <!-- Section 1: Pie chart + Frequency Filters -->
+                    <div class="row g-3 mb-3">
+                        <!-- Admin Pie Chart (compact) -->
+                        <div class="col-12 col-lg-5">
+                            <div class="card border-0 p-3 glass-card admin-analytics-card h-100">
+                                <h6 class="admin-analytics-section-title mb-2"><i class="fa-solid fa-chart-pie me-2"></i>User Distribution</h6>
+                                <div style="height: 220px; display: flex; align-items: center; justify-content: center;">
+                                    <canvas id="adminPieChart" aria-label="User distribution chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Admin Frequency and User Filter (wider) -->
+                        <div class="col-12 col-lg-7">
+                            <div class="card border-0 p-3 glass-card h-100 admin-analytics-card">
+                                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                    <h6 class="admin-analytics-section-title mb-0"><i class="fa-solid fa-sliders me-2"></i>Activity Frequency Filters</h6>
+                                </div>
+                                <!-- User Selector -->
+                                <div class="mb-3">
+                                    <label class="form-label small admin-analytics-label mb-1">
+                                        <i class="fa-solid fa-user me-1"></i>Select User
+                                    </label>
+                                    <select id="adminChartUserFilter" class="form-select form-select-sm" onchange="applyFrequencyFilter('admin')">
+                                        <option value="">All Users</option>
+                                    </select>
+                                </div>
+                                <!-- Date Range Pills -->
+                                <div class="mb-3">
+                                    <label class="form-label small admin-analytics-label mb-2">
+                                        <i class="fa-solid fa-calendar-days me-1"></i>Activity Frequency
+                                    </label>
+                                    <div class="btn-group btn-group-sm freq-filter-pills w-100 flex-wrap" role="group" aria-label="Admin frequency filter">
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreqAll"    value="all"     autocomplete="off" checked onchange="document.getElementById('adminFrequencyFilter').value='all'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreqAll">All</label>
+
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreqDay"    value="day"     autocomplete="off" onchange="document.getElementById('adminFrequencyFilter').value='day'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreqDay">Today</label>
+
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreqWeek"   value="week"    autocomplete="off" onchange="document.getElementById('adminFrequencyFilter').value='week'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreqWeek">Week</label>
+
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreq15"     value="15days"  autocomplete="off" onchange="document.getElementById('adminFrequencyFilter').value='15days'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreq15">15 Days</label>
+
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreqMonth"  value="month"   autocomplete="off" onchange="document.getElementById('adminFrequencyFilter').value='month'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreqMonth">Month</label>
+
+                                        <input type="radio" class="btn-check" name="adminFreqRadio" id="aFreq3M"     value="3months" autocomplete="off" onchange="document.getElementById('adminFrequencyFilter').value='3months'; applyFrequencyFilter('admin')">
+                                        <label class="btn btn-outline-warning" for="aFreq3M">3 Months</label>
+                                    </div>
+                                    <!-- Hidden select to keep JS compatibility -->
+                                    <select id="adminFrequencyFilter" class="d-none" onchange="applyFrequencyFilter('admin')">
+                                        <option value="all">All Time</option>
+                                        <option value="day">Today</option>
+                                        <option value="week">This Week</option>
+                                        <option value="15days">Last 15 Days</option>
+                                        <option value="month">This Month</option>
+                                        <option value="3months">Last 3 Months</option>
+                                    </select>
+                                </div>
+                                <!-- Reset filter button -->
+                                <button class="btn btn-sm btn-outline-danger mt-auto w-100" onclick="document.getElementById('adminChartUserFilter').value=''; document.getElementById('adminFrequencyFilter').value='all'; document.querySelectorAll('[name=adminFreqRadio]').forEach((r,i)=>r.checked=(i===0)); applyFrequencyFilter('admin')">
+                                    <i class="fa-solid fa-rotate-left me-1"></i>Reset Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Podium (top 3) -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <div class="card border-0 p-3 glass-card admin-analytics-card">
+                                <h6 class="admin-analytics-section-title admin-analytics-section-title--podium mb-3"><i class="fa-solid fa-trophy me-2"></i>Top 3 Podium</h6>
+                                <div id="adminPodium" class="admin-podium-host"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Leaderboard -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <div class="card border-0 p-3 glass-card admin-analytics-card">
+                                <h6 class="admin-analytics-section-title admin-analytics-section-title--leaderboard mb-3"><i class="fa-solid fa-list-ol me-2"></i>Leaderboard</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small admin-analytics-label mb-1" for="adminRankingMetric">Ranking by</label>
+                                    <select id="adminRankingMetric" class="form-select form-select-sm" onchange="updateAdminAnalytics()">
+                                        <option value="completedTasks">Most completed tasks</option>
+                                        <option value="totalHours">Most total time logged</option>
+                                    </select>
+                                </div>
+                                <div id="adminRankingList" class="admin-analytics-scroll admin-leaderboard-host"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Scoreboard (per-user summary + task rows) -->
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="card border-0 p-3 glass-card admin-analytics-card">
+                                <h6 class="admin-analytics-section-title mb-2"><i class="fa-solid fa-clipboard-list me-2"></i>Scoreboard</h6>
+                                <label class="form-label small admin-analytics-label mb-1" for="adminScoreboardUser">User</label>
+                                <select id="adminScoreboardUser" class="form-select form-select-sm" onchange="updateAdminScoreboard()">
+                                    <option value="">— All users (tasks below) —</option>
+                                </select>
+                                <div id="adminScoreboardSummary" class="admin-scoreboard-summary mt-3 d-none" aria-live="polite"></div>
+                                <div class="table-responsive mt-3 rounded admin-scoreboard-table-wrap">
+                                    <table id="adminScoreboardTable" class="table table-sm mb-0 align-middle admin-scoreboard-table">
+                                        <thead>
+                                            <tr id="adminScoreboardHeadRow"></tr>
+                                        </thead>
+                                        <tbody id="adminScoreboardBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Tasks -->
+                <h6 class="fw-bold text-muted mb-3"><i class="fa-solid fa-clock me-2"></i>Recent Tasks (Last 4)</h6>
+                <div id="recentTasks" class="row g-3">
+                    <p class="text-center text-muted">Loading...</p>
+                </div>
+            </div>
+
+            <!-- ========== FORM VIEW ========== -->
+            <div id="formView" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-link text-decoration-none ps-0 hover-lift" onclick="showDashboard()" style="color: var(--text-muted);">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm shadow-sm" onclick="resetTaskForm()">
+                        <i class="fa-solid fa-rotate-right me-1"></i> Reset Form
+                    </button>
+                </div>
+
+                <form id="taskForm" onsubmit="saveTask(event)">
+                    
+                    <!-- Task Details Card -->
+                    <div class="card p-3 mb-3 glass-card shadow-sm">
+                        <h6 class="section-title fw-bold border-bottom pb-2 mb-3" style="color: var(--accent-cyan);">
+                            <i class="fa-solid fa-file-pen me-2"></i>Task Details (કાર્ય વિગત)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small text-muted">🛠️ Task Name (કાર્ય નામ)</label>
+                                <input type="text" id="taskName" class="form-control" placeholder="What are you working on?" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">📁 Project (પ્રોજેક્ટ)</label>
+                                <div class="d-flex gap-2">
+                                    <select id="projectSelect" class="form-select" style="flex:1;" required>
+                                        <option value="">Select Project...</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" onclick="showProjectModal()" title="Add New Project">
+                                        <i class="fa-solid fa-plus"></i> New
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">💬 Remark / Notes (નોંધ)</label>
+                                <div id="editorRemark" style="min-height: 120px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Time Log Card (Separate Section) -->
+                    <div class="card p-3 mb-3 glass-card shadow-sm border-accent">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h6 class="section-title fw-bold mb-0" style="color: #4fc3f7;">
+                                <i class="fa-solid fa-stopwatch me-2"></i>Time Log Entries (સમય અહેવાલ)
+                            </h6>
+                            <span class="badge bg-info text-dark" id="entryCountBadge">1 entry</span>
+                        </div>
+                        <p class="text-muted small mb-3">Add multiple time entries for accurate tracking. System auto-calculates duration.</p>
+                        
+                        <div id="timeEntriesContainer">
+                            <!-- Dynamic rows will be inserted here -->
+                        </div>
+                        
+                        <button type="button" class="btn add-entry-btn w-100 mt-3" onclick="addTimeEntryRow()">
+                            <i class="fa-solid fa-plus-circle me-2"></i>Add Another Time Entry
+                        </button>
+                        
+                        <div class="total-duration-box mt-3 p-3 rounded" style="background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(79,195,247,0.15)); border: 1px solid rgba(0,229,255,0.3);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold"><i class="fa-solid fa-hourglass-half me-2"></i>Total Duration:</span>
+                                <span class="fs-5 fw-bold" style="color: var(--accent-cyan);" id="totalDurationDisplay">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fixed Bottom Save Button -->
+                    <div class="fixed-bottom-action p-3 shadow-lg glass-navbar">
+                        <div class="container">
+                            <button type="submit" class="btn w-100 fw-bold py-3 shadow save-btn">
+                                <i class="fa-solid fa-floppy-disk me-2"></i>Save Task 💾
+                            </button>
+                        </div>
+                    </div>
+                    <div style="height: 100px;"></div>
+                </form>
+            </div>
+
+            <!-- ========== HISTORY / TASK LIST VIEW ========== -->
+            <!-- ========== HISTORY / TASK LIST VIEW ========== -->
+    <div id="historyView" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-link text-decoration-none ps-0 hover-lift" onclick="showDashboard()" style="color: var(--text-muted);">
+                <i class="fa-solid fa-arrow-left me-1"></i> Dashboard
+            </button>
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <button class="btn btn-sm export-btn" onclick="exportFilteredPDF()" title="Download Filtered as PDF">
+                    <i class="fa-solid fa-file-pdf me-1"></i>PDF
+                </button>
+                <button class="btn btn-sm export-btn" onclick="exportFilteredExcel()" title="Download Filtered as Excel">
+                    <i class="fa-solid fa-file-excel me-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-sm refresh-btn" id="historyManageBtn" onclick="toggleHistoryManageMode()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color);" title="Show delete options">
+                    <i class="fa-solid fa-gear me-1"></i><span id="historyManageBtnLabel">Manage</span>
+                </button>
+                <button class="btn btn-sm refresh-btn" onclick="toggleAdvancedFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color);">
+                    <i class="fa-solid fa-filter me-1"></i>Filters
+                </button>
+                <button class="btn btn-sm refresh-btn" onclick="loadAllTasks()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-color);">
+                    <i class="fa-solid fa-rotate me-1"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-3" style="color: var(--text-primary);"><i class="fa-solid fa-clock-rotate-left me-2" style="color: var(--accent-cyan);"></i>Task History & List</h4>
+
+        <!-- 🔥 ENHANCED FILTERS BAR -->
+        <div class="card p-3 mb-4 glass-card shadow-sm filters-enhanced d-none" id="advancedFiltersPanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 small" style="color: var(--accent-cyan);">
+                    <i class="fa-solid fa-filter me-2"></i>Advanced Filters
+                    <span class="badge bg-info text-dark ms-2" id="activeFilterCount">0 active</span>
+                </h6>
+                <button class="btn btn-sm btn-outline-danger" onclick="clearAllFilters()" style="font-size:11px;">
+                    <i class="fa-solid fa-times me-1"></i>Clear All
+                </button>
+            </div>
+
+            <div class="row g-2 align-items-end">
+                <!-- Search -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-search me-1"></i>Search</label>
+                    <input type="text" id="filterSearch" class="form-control" placeholder="🔍 Search tasks..." onkeyup="applyFilters()">
+                </div>
+
+                <!-- Project Filter -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-folder me-1"></i>Project</label>
+                    <select id="filterProject" class="form-select" onchange="applyFilters()">
+                        <option value="">All Projects</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3 d-none admin-user-filter-wrap" id="adminUserFilterWrap">
+                    <label class="form-label small text-muted mb-1" for="filterUser"><i class="fa-solid fa-users me-1"></i>Users <span class="text-muted" style="font-weight:400;">(multi-select)</span></label>
+                    <select id="filterUser" class="form-select" multiple autocomplete="off"></select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-tag me-1"></i>Status</label>
+                    <select id="filterStatus" class="form-select" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Unassigned">Unassigned</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <!-- Year & Month Quick Filter -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-calendar me-1"></i>Year</label>
+                    <select id="filterYear" class="form-select" onchange="onYearMonthFilterChange()">
+                        <!-- Options will be populated by JS dynamically -->
+                    </select>
+                </div>
+                
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-calendar-day me-1"></i>Month</label>
+                    <select id="filterMonthSelect" class="form-select" onchange="onYearMonthFilterChange()">
+                        <option value="">All Months</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-sort me-1"></i>Sort By</label>
+                    <select id="filterSortOrder" class="form-select" onchange="applyFilters()">
+                        <option value="desc-newest">Newest First ↓</option>
+                        <option value="asc-oldest">Oldest First ↑</option>
+                        <option value="asc-name">Name A-Z ↑</option>
+                        <option value="desc-name">Name Z-A ↓</option>
+                        <option value="asc-duration">Duration Low-High ↑</option>
+                        <option value="desc-duration">Duration High-Low ↓</option>
+                    </select>
+                </div>
+
+                <!-- Date From -->
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-calendar-check me-1"></i>Date From</label>
+                    <input type="date" id="filterDateFrom" class="form-control" onchange="applyFilters()">
+                </div>
+
+                <!-- Date To -->
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1"><i class="fa-solid fa-calendar-xmark me-1"></i>Date To</label>
+                    <input type="date" id="filterDateTo" class="form-control" onchange="applyFilters()">
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div id="activeFiltersDisplay" class="mt-3 d-none">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <small class="text-muted me-2">Active:</small>
+                    <div id="filterTagsContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-3 mb-3 glass-card d-none" id="bulkDeletePanel" aria-hidden="true">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <input type="checkbox" id="selectAllVisibleTasks" onchange="toggleSelectAllVisible(this.checked)">
+                    <label for="selectAllVisibleTasks" class="small text-muted mb-0">Select all visible tasks</label>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSelectedTasks()">Delete Selected</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteFilteredTasks()">Delete Filtered</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteAllTasks()">Delete All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Count Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2 py-2 rounded" style="background: var(--bg-input); border: 1px solid var(--border-color);">
+            <small class="text-muted">
+                <i class="fa-solid fa-list me-1"></i>
+                Showing <strong id="filteredCount" class="text-warning">0</strong> of <strong id="totalCount">0</strong> tasks
+            </small>
+            <small class="text-muted" id="lastUpdatedTime"></small>
+        </div>
+
+        <!-- Tasks List -->
+        <div id="tasksListContainer" class="row g-3">
+            <p class="text-center text-muted">Loading...</p>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Add Project Modal -->
+    <div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg glass-card">
+                <div class="modal-header border-bottom" style="border-color: var(--border-color) !important;">
+                    <h5 class="modal-title fw-bold" style="color: var(--accent-cyan);"><i class="fa-solid fa-folder-plus me-2"></i>Add New Project</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label small text-muted">Project Name</label>
+                        <input type="text" id="newProjectName" class="form-control" placeholder="Enter project name...">
+                    </div>
+                </div>
+                <div class="modal-footer border-top" style="border-color: var(--border-color) !important;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn fw-bold" onclick="saveNewProject()" style="background: var(--accent-cyan); color: #000; border: none;">Save Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg glass-card">
+                <div class="modal-header border-bottom" style="border-color: var(--border-color) !important;">
+                    <h5 class="modal-title fw-bold" style="color: var(--accent-cyan);">
+                        <i class="fa-solid fa-pen-to-square me-2"></i>Edit Task 
+                        <span class="badge bg-warning text-dark ms-2 small" id="editRoleBadge">User</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <input type="hidden" id="editTaskId">
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Status (સ્થિતિ)</label>
+                            <select id="editStatus" class="form-select">
+                                <option value="Unassigned">Unassigned</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Task Name</label>
+                            <input type="text" id="editTaskName" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Remark</label>
+                            <div id="editorEditRemark" style="min-height: 120px;"></div>
+                        </div>
+                        
+                        <div class="col-12 mt-3 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                            <label class="form-label small fw-bold" style="color: #4fc3f7;">⏱️ Edit Time Entries</label>
+                            <div id="editTimeEntriesContainer" class="edit-time-container"></div>
+                            <button type="button" class="btn btn-sm btn-outline-info mt-2" onclick="addEditTimeEntryRow()">
+                                <i class="fa-solid fa-plus me-1"></i>Add Entry
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top" style="border-color: var(--border-color) !important;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning fw-bold" onclick="updateTask()">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>Update Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg glass-card">
+                <div class="modal-header border-bottom" style="border-color: var(--border-color) !important;">
+                    <h5 class="modal-title fw-bold" style="color: var(--accent-cyan);"><i class="fa-solid fa-eye me-2"></i>Task Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" style="background: #0d0d0d;">
+                    <div id="previewContent" class="p-4"></div>
+                </div>
+                <div class="modal-footer border-top" style="border-color: var(--border-color) !important;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="toast-custom"></div>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

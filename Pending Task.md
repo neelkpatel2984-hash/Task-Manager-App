@@ -1,0 +1,1 @@
+pie chart bahu j mota chhe teni baju ma activity frequency dekhay filter all, month, 3 month, week, day, 15 days evu add kari do karan ke pie chart bahu j mota dekhay chhe aavu j same admin mate pan ane jode ke admin user pan select kari shake frequency ma 
